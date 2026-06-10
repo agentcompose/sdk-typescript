@@ -128,6 +128,7 @@ an `AgentError`; task failures surface as an `error` event and a `failed` state.
 | `inProcess(def)` | Client backed by a direct, in-process runtime. |
 | `serveStdio(def)` | Serve an agent over the stdio binding (NDJSON). |
 | `spawnStdio(cmd, opts)` | Host-side client that spawns + drives a subprocess agent. |
+| `validateWireParams(name, params)` | Validate inbound JSON-RPC params against the canonical `@agentcompose/spec` schemas (used at the stdio boundary; reusable for other transports). |
 | `AgentRuntime` | The transport-neutral core (advanced use). |
 
 `AgentClient` (uniform across transports): `describe`, `configure`, `submit`,
