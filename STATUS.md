@@ -1,8 +1,8 @@
 # SDK Status & Limitations
 
-> Honest, current-state assessment of `@agentcompose/sdk`. This is **substrate**
-> (`0.0.x`): the single-agent core runs and is tested, but several capabilities
-> needed for production and for sharing agents publicly are not built yet.
+> Honest, current-state assessment of `@agentcompose/sdk@0.1.0`. This is the
+> **single-agent core** (`0.1.x`): it runs and is tested, but several capabilities
+> needed for HTTP serving and for sharing agents publicly are not built yet.
 
 Last reviewed: 2026-06-10
 
@@ -14,7 +14,7 @@ Last reviewed: 2026-06-10
 - **Streaming** — `message` deltas, `progress`, `artifact` events.
 - **Interaction** — `input-required` ↔ `provideInput`, cancel, idempotency keys.
 - **Transports behind one `AgentClient`** — `inProcess`, `serveStdio` (NDJSON), `spawnStdio` (subprocess host).
-- **Quality** — in-process + end-to-end stdio tests passing; clean `tsc`; zero build step (Node ≥ 22 runs the TS directly).
+- **Quality** — in-process + end-to-end stdio tests passing; clean `tsc`. Published as compiled JS + type declarations (runs on Node ≥ 18.19); authored in strip-mode TypeScript (Node ≥ 22.6 runs it directly in dev).
 
 ## Known gaps
 

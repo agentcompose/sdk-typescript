@@ -1,19 +1,23 @@
 # @agentcompose/sdk
 
+[![npm](https://img.shields.io/npm/v/@agentcompose/sdk.svg)](https://www.npmjs.com/package/@agentcompose/sdk)
+[![provenance](https://img.shields.io/badge/npm-provenance-blue.svg)](https://www.npmjs.com/package/@agentcompose/sdk)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+
 > TypeScript SDK for [AgentCompose](https://github.com/agentcompose/spec) — define
 > **configurable agent components** once, and run them in-process, as a local
 > subprocess, or (soon) over HTTP.
 
-**Status:** `0.0.x` early/substrate · **License:** Apache-2.0 · **Requires:** Node ≥ 22
+**Version:** `0.1.0` · **License:** Apache-2.0 · **Requires:** Node ≥ 18.19
 
 This SDK is the first runnable implementation of the AgentCompose contract. It
 covers the **single-agent core**: configuration, the task lifecycle, and the
 in-process + stdio transports. Composition (typed capability I/O, sessions) is
 deferred to a later release, in step with the spec.
 
-> ⚠️ **Substrate release.** See [STATUS.md](./STATUS.md) for exactly what works
-> today, the known gaps (npm publish, HTTP transport, auth enforcement), and
-> readiness by use case before you build on it.
+> 📋 **What works today.** See [STATUS.md](./STATUS.md) for the exact feature
+> matrix, the known gaps (HTTP transport, auth enforcement, typed capability I/O),
+> and readiness by use case before you build on it.
 >
 > 💡 **Writing an agent?** Read the spec's
 > [Authoring Agents — Design Guidance](https://github.com/agentcompose/spec/blob/main/guides/authoring-agents.md)
