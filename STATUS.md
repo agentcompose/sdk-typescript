@@ -27,6 +27,7 @@ Last reviewed: 2026-06-10
 | **No typed capability I/O / sessions** | Agents can't be composed *programmatically* by input/output shape; no cross-task memory. | Spec Scope B |
 | **Reference agent is a stub** | `examples/research-agent.ts` simulates work with `sleep`; no real model is wired. | planned: real `provider` binding |
 | **Substrate maturity** | No retries/backpressure, no graceful shutdown drain, no logging/telemetry hooks, shallow input validation. | hardening backlog |
+| **Transport subscription parity** | In-process `subscribe()` supports multiple subscribers with synchronous backlog replay; the stdio client exposes a single shared, single-consumer event stream (no re-attach — `tasks/subscribe` is absent by the stdio binding). No data is lost, but tooling that assumes multi-subscriber parity across transports differs. | planned |
 
 ## Readiness by use case
 

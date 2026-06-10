@@ -46,3 +46,20 @@ test("stdio: invalid configuration returns -32007", async () => {
     await client.close();
   }
 });
+
+test("stdio: idempotent re-submit does not duplicate forwarded events", async () => {
+  const client = spawnStdio("node", { args: [agentPath] });
+  try {
+    const first = await client.submit([{ kind: "text", text: "topic" }], { idempotencyKey: "k1" });
+    const again = await client.submit([{ kind: "text", text: "topic" }], { idempotencyKey: "k1" });
+    assert.equal(again.id, first.id, "idempotent re-submit returns the same task");
+
+    const events: TaskEvent[] = [];
+    for await (const e of client.events(first.id)) events.push(e);
+
+    const results = events.filter((e) => e.type === "result");
+    assert.equal(results.length, 1, "result is forwarded exactly once, not duplicated");
+  } finally {
+    await client.close();
+  }
+});

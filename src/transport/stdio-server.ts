@@ -29,7 +29,13 @@ export function serveStdio(def: AgentDefinition, opts: ServeStdioOptions = {}): 
   const notify = (method: string, params: unknown): void =>
     write({ jsonrpc: "2.0", method, params });
 
+  const forwarded = new Set<string>();
   const forward = (taskId: string): void => {
+    // Forward each task's events exactly once. An idempotent re-submit returns an
+    // existing task; without this guard a second subscribe would re-emit its
+    // `task/event` notifications, duplicating them for the client.
+    if (forwarded.has(taskId)) return;
+    forwarded.add(taskId);
     void (async () => {
       for await (const ev of runtime.subscribe(taskId)) {
         notify("task/event", ev as TaskEvent);
