@@ -1,4 +1,8 @@
-// Core AgentCompose types (mirrors the schemas in agentcompose/spec).
+// Core AgentCompose types. These are the typed projection of the canonical schemas
+// in @agentcompose/spec; a drift-guard test (test/wire.test.ts) validates
+// representative values of these types against those schemas so the two cannot
+// silently diverge. Inbound wire messages are validated against the schemas at the
+// transport boundary (see wire.ts).
 export const AGENTCOMPOSE_VERSION = "0.1.0";
 
 export type Part =

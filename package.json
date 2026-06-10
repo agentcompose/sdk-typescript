@@ -1,6 +1,6 @@
 {
   "name": "@agentcompose/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript SDK for AgentCompose — define configurable agent components and compose them over in-process and stdio transports.",
   "type": "module",
   "license": "Apache-2.0",
@@ -26,6 +26,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@agentcompose/spec": "^0.1.1",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1"
   },

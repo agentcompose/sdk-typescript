@@ -7,3 +7,5 @@ export { serveStdio } from "./transport/stdio-server.ts";
 export type { ServeStdioOptions } from "./transport/stdio-server.ts";
 export { spawnStdio } from "./transport/stdio-client.ts";
 export type { SpawnStdioOptions } from "./transport/stdio-client.ts";
+export { validateWireParams } from "./wire.ts";
+export type { WireParams, WireValidationFailure } from "./wire.ts";

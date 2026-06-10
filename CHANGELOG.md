@@ -4,6 +4,18 @@ All notable changes to `@agentcompose/sdk` are documented here. This project adh
 to [Semantic Versioning](https://semver.org/). Pre-1.0, minor versions may introduce
 additive changes; breaking changes are avoided but possible while the contract settles.
 
+## 0.1.1 — 2026-06-10
+
+### Added
+- **Inbound wire validation against the canonical contract.** The SDK now depends on
+  [`@agentcompose/spec`](https://www.npmjs.com/package/@agentcompose/spec) and validates
+  inbound JSON-RPC params (`tasks/submit`, `agent/configure`, `tasks/provideInput`) at
+  the stdio boundary against the published schemas, rejecting malformed messages with
+  `InvalidParams` (-32602). Exposed as `validateWireParams` for other transports.
+- **Type drift guard.** A test validates representative values of the SDK's types
+  (`Part`, `Task`, `Artifact`, `AgentDescriptor`) against the canonical schemas, so the
+  hand-written types can no longer silently diverge from the contract.
+
 ## 0.1.0 — 2026-06-10
 
 First published release. The single-agent substrate of the AgentCompose contract.

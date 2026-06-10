@@ -4,6 +4,7 @@ import { AgentRuntime } from "../agent.ts";
 import type { AgentDefinition } from "../agent.ts";
 import { JsonRpcCodes, toRpcError } from "../types.ts";
 import type { Part, TaskEvent } from "../types.ts";
+import { validateWireParams } from "../wire.ts";
 
 export interface ServeStdioOptions {
   input?: Readable;
@@ -62,9 +63,14 @@ export function serveStdio(def: AgentDefinition, opts: ServeStdioOptions = {}): 
       switch (method) {
         case "agent/describe":
           return reply(id, runtime.describe());
-        case "agent/configure":
+        case "agent/configure": {
+          const bad = validateWireParams("agent-configure", params);
+          if (bad) return fail(id, { code: JsonRpcCodes.InvalidParams, message: bad.message, data: bad.errors });
           return reply(id, runtime.configure((params.config ?? {}) as Record<string, unknown>));
+        }
         case "tasks/submit": {
+          const bad = validateWireParams("task-submit", params);
+          if (bad) return fail(id, { code: JsonRpcCodes.InvalidParams, message: bad.message, data: bad.errors });
           const task = await runtime.submit(
             (params.goal ?? []) as Part[],
             params.idempotencyKey ? { idempotencyKey: String(params.idempotencyKey) } : undefined,
@@ -77,8 +83,11 @@ export function serveStdio(def: AgentDefinition, opts: ServeStdioOptions = {}): 
           return reply(id, runtime.get(String(params.id)));
         case "tasks/cancel":
           return reply(id, runtime.cancel(String(params.id)));
-        case "tasks/provideInput":
+        case "tasks/provideInput": {
+          const bad = validateWireParams("task-provide-input", params);
+          if (bad) return fail(id, { code: JsonRpcCodes.InvalidParams, message: bad.message, data: bad.errors });
           return reply(id, runtime.provideInput(String(params.id), (params.input ?? []) as Part[]));
+        }
         default:
           return fail(id, { code: JsonRpcCodes.MethodNotFound, message: `Unknown method: ${method}` });
       }

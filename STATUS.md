@@ -10,6 +10,7 @@ Last reviewed: 2026-06-10
 
 - **`defineAgent()`** — reusable, configurable agent components (`configSchema` + handler).
 - **Configuration** — validation against `configSchema`, default application, secrets resolved from env (`{ secretRef }`).
+- **Wire validation** — inbound JSON-RPC params (`tasks/submit`, `agent/configure`, `tasks/provideInput`) are validated at the transport boundary against the **canonical `@agentcompose/spec` schemas**; malformed messages are rejected with `InvalidParams`. A drift-guard test ties the SDK types to those schemas.
 - **Task lifecycle** — `submitted → working → (input-required) → completed/failed/canceled`.
 - **Streaming** — `message` deltas, `progress`, `artifact` events.
 - **Interaction** — `input-required` ↔ `provideInput`, cancel, idempotency keys.
@@ -25,7 +26,7 @@ Last reviewed: 2026-06-10
 | **No auth enforcement** | The descriptor can *declare* auth, but the SDK does not verify bearer/apiKey/oauth on incoming calls. Fine for local, not for exposed agents. | planned (with HTTP) |
 | **No typed capability I/O / sessions** | Agents can't be composed *programmatically* by input/output shape; no cross-task memory. | Spec Scope B |
 | **Reference agent is a stub** | `examples/research-agent.ts` simulates work with `sleep`; no real model is wired. | planned: real `provider` binding |
-| **Substrate maturity** | No retries/backpressure, no graceful shutdown drain, no logging/telemetry hooks, shallow input validation. | hardening backlog |
+| **Substrate maturity** | No retries/backpressure, no graceful shutdown drain, no logging/telemetry hooks. | hardening backlog |
 | **Transport subscription parity** | In-process `subscribe()` supports multiple subscribers with synchronous backlog replay; the stdio client exposes a single shared, single-consumer event stream (no re-attach — `tasks/subscribe` is absent by the stdio binding). No data is lost, but tooling that assumes multi-subscriber parity across transports differs. | planned |
 
 ## Readiness by use case
