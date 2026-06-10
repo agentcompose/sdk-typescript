@@ -23,10 +23,12 @@ deferred to a later release, in step with the spec.
 ## Install
 
 ```bash
-npm install   # ajv + ajv-formats
+npm install @agentcompose/sdk
 ```
 
-No build step — Node runs the TypeScript directly.
+The published package ships compiled JavaScript + type declarations (`dist/`), so it
+runs on Node ≥ 18.19 with no build step on your side. (This repo is *authored* in
+strip-mode TypeScript; `npm run build` emits the `dist/` that gets published.)
 
 ## Define an agent (a reusable, configurable component)
 

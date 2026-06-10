@@ -20,8 +20,7 @@ Last reviewed: 2026-06-10
 
 | Gap | Impact | Tracking |
 |-----|--------|----------|
-| **SDK not published to npm** | The SDK itself isn't on npm, so **builders can't `npm i @agentcompose/sdk` to write agents at all**. This is the primary blocker — everything downstream depends on it. Version is `0.0.0`. | planned: tag + publish `0.1.0` |
-| **No published agents yet** | Even once the SDK is published, an agent built *with* it (a separate package) must itself be published before others can `npm i` / `npx` and run it as a subprocess. | derived from SDK publish |
+| **No published agents yet** | An agent built *with* the SDK (a separate package) must itself be published before others can `npm i` / `npx` and run it as a subprocess. | derived from SDK publish |
 | **No HTTP transport** | Agents can't be exposed as a network service; same-machine only (in-process / subprocess). | planned |
 | **No auth enforcement** | The descriptor can *declare* auth, but the SDK does not verify bearer/apiKey/oauth on incoming calls. Fine for local, not for exposed agents. | planned (with HTTP) |
 | **No typed capability I/O / sessions** | Agents can't be composed *programmatically* by input/output shape; no cross-task memory. | Spec Scope B |

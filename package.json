@@ -7,7 +7,7 @@
   "homepage": "https://agentcompose.dev",
   "repository": { "type": "git", "url": "git+https://github.com/agentcompose/sdk-typescript.git" },
   "engines": { "node": ">=18.19" },
-  "files": ["dist", "README.md", "STATUS.md", "LICENSE"],
+  "files": ["dist", "README.md", "STATUS.md", "CHANGELOG.md", "LICENSE"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
