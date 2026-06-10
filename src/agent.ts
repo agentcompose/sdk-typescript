@@ -25,7 +25,7 @@ import type {
 
 /** Emit methods available on the handler context. */
 export interface EmitApi {
-  status(state: "working" | "input-required", message?: Part[]): void;
+  status(state: "working" | "input-required", message?: string): void;
   message(delta: Part): void;
   progress(percent?: number, message?: string): void;
   artifact(parts: Part[], name?: string): void;
@@ -249,10 +249,10 @@ export class AgentRuntime {
     for (const l of [...run.listeners]) l(ev);
   }
 
-  #transition(run: TaskRun, state: Task["state"], message?: Part[]): void {
+  #transition(run: TaskRun, state: Task["state"], message?: string, prompt?: Part[]): void {
     run.task.state = state;
     run.task.updatedAt = new Date().toISOString();
-    this.#emit(run, { type: "status", taskId: run.task.id, state, message });
+    this.#emit(run, { type: "status", taskId: run.task.id, state, message, prompt });
   }
 
   #finish(run: TaskRun): void {
@@ -272,8 +272,7 @@ export class AgentRuntime {
         signal: run.controller.signal,
         // Resolve secrets inside the try so a missing one fails the task cleanly.
         config: resolveSecrets(this.#effectiveConfig) as AgentConfig,
-        status: (state, message) => this.#transition(run, state, message),
-        message: (delta) => this.#emit(run, { type: "message", taskId: run.task.id, delta }),
+        status: (state, message) => this.#transition(run, state, message),        message: (delta) => this.#emit(run, { type: "message", taskId: run.task.id, delta }),
         progress: (percent, message) =>
           this.#emit(run, { type: "progress", taskId: run.task.id, percent, message }),
         artifact: (parts, name) => {
@@ -289,7 +288,8 @@ export class AgentRuntime {
         requestInput: (prompt) =>
           new Promise<Part[]>((resolve) => {
             run.pendingInput = resolve;
-            this.#transition(run, "input-required", prompt);
+            // The structured ask travels on `prompt`; `message` stays human-readable.
+            this.#transition(run, "input-required", undefined, prompt);
           }),
       };
 

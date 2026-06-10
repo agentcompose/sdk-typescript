@@ -89,7 +89,7 @@ export const researchAgent = defineAgent({
 
     // 5. Produce a structured artifact alongside the prose result.
     ctx.artifact(
-      [{ kind: "data", data: { topic, depth, audience, sections: points.length }, mimeType: "application/json" }],
+      [{ kind: "json", json: { topic, depth, audience, sections: points.length }, mediaType: "application/json" }],
       "outline.json",
     );
 

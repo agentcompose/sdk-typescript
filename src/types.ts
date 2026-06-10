@@ -3,8 +3,8 @@ export const AGENTCOMPOSE_VERSION = "0.1.0";
 
 export type Part =
   | { kind: "text"; text: string }
-  | { kind: "file"; uri: string; mimeType?: string; name?: string }
-  | { kind: "data"; data: unknown; mimeType?: string };
+  | { kind: "file"; mediaType: string; name?: string; uri?: string; bytes?: string }
+  | { kind: "json"; json: unknown; mediaType?: string };
 
 export type TaskState =
   | "submitted"
@@ -69,7 +69,7 @@ export interface AgentDescriptor {
 }
 
 export type TaskEvent =
-  | { type: "status"; taskId: string; state: TaskState; message?: Part[] }
+  | { type: "status"; taskId: string; state: TaskState; message?: string; prompt?: Part[] }
   | { type: "progress"; taskId: string; percent?: number; message?: string }
   | { type: "message"; taskId: string; delta: Part }
   | { type: "artifact"; taskId: string; artifact: Artifact }

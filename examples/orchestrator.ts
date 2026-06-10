@@ -18,7 +18,7 @@ async function drive(client: AgentClient, taskId: string): Promise<void> {
       case "status":
         log(`  • status  → ${ev.state}`);
         if (ev.state === "input-required") {
-          const prompt = ev.message?.map(partText).join(" ") ?? "(input needed)";
+          const prompt = ev.prompt?.map(partText).join(" ") ?? ev.message ?? "(input needed)";
           log(`    ↳ agent asks: ${prompt}`);
           await client.provideInput(taskId, [{ kind: "text", text: "AI agent interoperability standards" }]);
           log(`    ↳ we answered: "AI agent interoperability standards"`);
