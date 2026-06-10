@@ -83,7 +83,17 @@ function resolveSecrets(value: unknown): unknown {
   if (value && typeof value === "object") {
     const obj = value as Record<string, unknown>;
     if (typeof obj[SECRET_REF] === "string") {
-      return process.env[obj[SECRET_REF] as string] ?? null;
+      const name = obj[SECRET_REF] as string;
+      const val = process.env[name];
+      // Fail clearly rather than resolve to null and let the agent make an
+      // unauthenticated call with a silently-missing credential.
+      if (val === undefined) {
+        throw new AgentError(
+          ErrorCodes.InvalidConfiguration,
+          `Secret reference "${name}" is not set in the environment.`,
+        );
+      }
+      return val;
     }
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(obj)) out[k] = resolveSecrets(v);
@@ -231,6 +241,10 @@ export class AgentRuntime {
   }
 
   #emit(run: TaskRun, ev: TaskEvent): void {
+    // Transport rule: nothing is delivered after a terminal state. A handler that
+    // keeps emitting after cancel (without checking ctx.signal) must not append
+    // post-terminal events to the backlog a later subscribe() would replay.
+    if (run.done) return;
     run.events.push(ev);
     for (const l of [...run.listeners]) l(ev);
   }
@@ -249,35 +263,36 @@ export class AgentRuntime {
   }
 
   async #run(run: TaskRun, goal: Part[]): Promise<void> {
-    const ctx: HandlerContext = {
-      taskId: run.task.id,
-      signal: run.controller.signal,
-      config: resolveSecrets(this.#effectiveConfig) as AgentConfig,
-      status: (state, message) => this.#transition(run, state, message),
-      message: (delta) => this.#emit(run, { type: "message", taskId: run.task.id, delta }),
-      progress: (percent, message) =>
-        this.#emit(run, { type: "progress", taskId: run.task.id, percent, message }),
-      artifact: (parts, name) => {
-        const artifact: Artifact = {
-          id: "art_" + randomUUID().slice(0, 8),
-          parts,
-          name,
-          createdAt: new Date().toISOString(),
-        };
-        run.task.artifacts.push(artifact);
-        this.#emit(run, { type: "artifact", taskId: run.task.id, artifact });
-      },
-      requestInput: (prompt) =>
-        new Promise<Part[]>((resolve) => {
-          run.pendingInput = resolve;
-          this.#transition(run, "input-required", prompt);
-        }),
-    };
-
     if (run.done) return; // canceled before start
     this.#transition(run, "working");
 
     try {
+      const ctx: HandlerContext = {
+        taskId: run.task.id,
+        signal: run.controller.signal,
+        // Resolve secrets inside the try so a missing one fails the task cleanly.
+        config: resolveSecrets(this.#effectiveConfig) as AgentConfig,
+        status: (state, message) => this.#transition(run, state, message),
+        message: (delta) => this.#emit(run, { type: "message", taskId: run.task.id, delta }),
+        progress: (percent, message) =>
+          this.#emit(run, { type: "progress", taskId: run.task.id, percent, message }),
+        artifact: (parts, name) => {
+          const artifact: Artifact = {
+            id: "art_" + randomUUID().slice(0, 8),
+            parts,
+            name,
+            createdAt: new Date().toISOString(),
+          };
+          run.task.artifacts.push(artifact);
+          this.#emit(run, { type: "artifact", taskId: run.task.id, artifact });
+        },
+        requestInput: (prompt) =>
+          new Promise<Part[]>((resolve) => {
+            run.pendingInput = resolve;
+            this.#transition(run, "input-required", prompt);
+          }),
+      };
+
       const out = await this.#def.handle(goal, ctx);
       if (run.done) return; // canceled during work
       const result: Result = Array.isArray(out)
