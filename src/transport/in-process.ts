@@ -1,7 +1,7 @@
 import { AgentRuntime } from "../agent.ts";
 import type { AgentDefinition } from "../agent.ts";
 import type { AgentClient } from "../client.ts";
-import type { AgentConfig, Part, Task } from "../types.ts";
+import type { AgentConfig, Part } from "../types.ts";
 
 /**
  * In-process adapter: drive an agent as a library, with zero serialization.
