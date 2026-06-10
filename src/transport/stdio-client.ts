@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { Channel } from "../channel.ts";
-import { AgentError, isTerminal } from "../types.ts";
+import { AgentError, assertCompatibleVersion, isTerminal } from "../types.ts";
 import type { AgentClient } from "../client.ts";
 import type { AgentConfig, AgentDescriptor, Part, Task, TaskEvent } from "../types.ts";
 
@@ -82,7 +82,12 @@ export function spawnStdio(command: string, opts: SpawnStdioOptions = {}): Agent
   });
 
   return {
-    describe: () => rpc<AgentDescriptor>("agent/describe"),
+    describe: async () => {
+      const desc = await rpc<AgentDescriptor>("agent/describe");
+      // Reject a subprocess agent speaking an incompatible protocol version.
+      assertCompatibleVersion(desc.agentcomposeVersion);
+      return desc;
+    },
     configure: (config: AgentConfig) => rpc<AgentConfig>("agent/configure", { config }),
     submit: (goal: Part[], o) => rpc<Task>("tasks/submit", { goal, ...o }),
     get: (id: string) => rpc<Task>("tasks/get", { id }),

@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { defineAgent, inProcess, ErrorCodes } from "../src/index.ts";
+import { defineAgent, inProcess, ErrorCodes, AGENTCOMPOSE_VERSION } from "../src/index.ts";
 import type { TaskEvent } from "../src/index.ts";
 
 const echo = defineAgent({
   descriptor: {
-    agentcomposeVersion: "0.1.0",
+    // agentcomposeVersion omitted on purpose — defineAgent defaults it.
     id: "test.echo",
     name: "Echo",
     version: "1.0.0",
@@ -102,4 +102,27 @@ test("input-required → provideInput resumes and completes", async () => {
   const p = final.result?.parts[0];
   assert.equal(p && "text" in p ? p.text : "", "Hello, Ada");
   assert.ok(seen.some((e) => e.type === "status" && e.state === "input-required"));
+});
+
+test("defineAgent defaults the protocol version and rejects an incompatible one", async () => {
+  // Defaulted when omitted.
+  assert.equal(await inProcess(echo).describe().then((d) => d.agentcomposeVersion), AGENTCOMPOSE_VERSION);
+
+  // Incompatible declared version is rejected with UnsupportedVersion.
+  assert.throws(
+    () =>
+      defineAgent({
+        descriptor: {
+          agentcomposeVersion: "9.0.0",
+          id: "test.future",
+          name: "Future",
+          version: "1.0.0",
+          capabilities: [{ id: "x", description: "x" }],
+        },
+        async handle() {
+          return [];
+        },
+      }),
+    (err: any) => err.code === ErrorCodes.UnsupportedVersion,
+  );
 });

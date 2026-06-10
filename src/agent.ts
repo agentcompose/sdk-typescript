@@ -6,8 +6,10 @@ const Ajv = ((AjvDefault as any).default ?? AjvDefault) as any;
 const addFormats = ((addFormatsDefault as any).default ?? addFormatsDefault) as any;
 import { Channel } from "./channel.ts";
 import {
+  AGENTCOMPOSE_VERSION,
   AgentError,
   ErrorCodes,
+  assertCompatibleVersion,
   isTerminal,
   toRpcError,
 } from "./types.ts";
@@ -48,11 +50,18 @@ export interface AgentDefinition {
   handle: AgentHandler;
 }
 
-/** Validate-light a definition and return it unchanged. */
+/** Validate-light a definition, default the protocol version, and return it. */
 export function defineAgent(def: AgentDefinition): AgentDefinition {
   if (!def.descriptor?.id) throw new Error("defineAgent: descriptor.id is required");
   if (!Array.isArray(def.descriptor.capabilities) || def.descriptor.capabilities.length === 0) {
     throw new Error("defineAgent: at least one capability is required");
+  }
+  // Single source of truth: default to the SDK's protocol version, and reject a
+  // descriptor that declares an incompatible one.
+  if (def.descriptor.agentcomposeVersion === undefined) {
+    def.descriptor.agentcomposeVersion = AGENTCOMPOSE_VERSION;
+  } else {
+    assertCompatibleVersion(def.descriptor.agentcomposeVersion);
   }
   return def;
 }

@@ -54,7 +54,7 @@ export interface Capability {
 }
 
 export interface AgentDescriptor {
-  agentcomposeVersion: string;
+  agentcomposeVersion?: string;
   id: string;
   name: string;
   version: string;
@@ -116,3 +116,27 @@ export const toRpcError = (err: unknown): RpcError => {
   const message = err instanceof Error ? err.message : String(err);
   return { code: JsonRpcCodes.InternalError, message };
 };
+
+/**
+ * Compatibility key for a protocol version. Pre-1.0, minor bumps are breaking,
+ * so 0.1 and 0.2 are incompatible; post-1.0, the major alone decides.
+ */
+export const compatKey = (version: string): string => {
+  const [major = "0", minor = "0"] = version.split(".");
+  return major === "0" ? `0.${minor}` : major;
+};
+
+/** Throw UnsupportedVersion if a peer's protocol version is incompatible with ours. */
+export function assertCompatibleVersion(
+  peer: string | undefined,
+  local: string = AGENTCOMPOSE_VERSION,
+): void {
+  if (!peer) return;
+  if (compatKey(peer) !== compatKey(local)) {
+    throw new AgentError(
+      ErrorCodes.UnsupportedVersion,
+      `Incompatible AgentCompose protocol version: peer speaks ${peer}, this SDK speaks ${local}.`,
+      { peer, local },
+    );
+  }
+}

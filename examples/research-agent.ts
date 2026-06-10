@@ -4,7 +4,7 @@
 // As a component it is reusable: run on defaults, or configure depth / audience /
 // pacing. It demonstrates progress, streaming, artifacts, input-required, and
 // structured errors.
-import { defineAgent, serveStdio, AgentError, ErrorCodes } from "../src/index.ts";
+import { defineAgent, serveStdio, AgentError, ErrorCodes, AGENTCOMPOSE_VERSION } from "../src/index.ts";
 import type { Part } from "../src/index.ts";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -12,7 +12,7 @@ const textOf = (parts: Part[]) => parts.map((p) => (p.kind === "text" ? p.text :
 
 export const researchAgent = defineAgent({
   descriptor: {
-    agentcomposeVersion: "0.1.0",
+    agentcomposeVersion: AGENTCOMPOSE_VERSION,
     id: "dev.agentcompose.examples.research",
     name: "Research Agent",
     version: "1.0.0",
