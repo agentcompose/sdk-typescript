@@ -13,6 +13,7 @@
     "agent": "node examples/research-agent.ts",
     "demo": "node examples/orchestrator.ts",
     "demo:advanced": "node examples/advanced.ts",
+    "demo:team": "node examples/run-team.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
