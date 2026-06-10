@@ -14,7 +14,6 @@ Last reviewed: 2026-06-10
 - **Streaming** — `message` deltas, `progress`, `artifact` events.
 - **Interaction** — `input-required` ↔ `provideInput`, cancel, idempotency keys.
 - **Transports behind one `AgentClient`** — `inProcess`, `serveStdio` (NDJSON), `spawnStdio` (subprocess host).
-- **Composition (experimental)** — `Coordinator` lets a master agent chain / fan-out other agents (in-process or subprocess). A Scope-B learning spike; the API will change.
 - **Quality** — in-process + end-to-end stdio tests passing; clean `tsc`; zero build step (Node ≥ 22 runs the TS directly).
 
 ## Known gaps
