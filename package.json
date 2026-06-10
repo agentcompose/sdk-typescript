@@ -1,14 +1,24 @@
 {
   "name": "@agentcompose/sdk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "TypeScript SDK for AgentCompose — define configurable agent components and compose them over in-process and stdio transports.",
   "type": "module",
   "license": "Apache-2.0",
-  "engines": { "node": ">=22" },
+  "homepage": "https://agentcompose.dev",
+  "repository": { "type": "git", "url": "git+https://github.com/agentcompose/sdk-typescript.git" },
+  "engines": { "node": ">=18.19" },
+  "files": ["dist", "README.md", "STATUS.md", "LICENSE"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "test": "node --test test/*.test.ts",
     "agent": "node examples/research-agent.ts",
     "demo": "node examples/orchestrator.ts",
@@ -20,7 +30,7 @@
     "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
+    "typescript": "^5.9.0",
     "@types/node": "^22.0.0"
   }
 }
