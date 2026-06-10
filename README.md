@@ -14,6 +14,11 @@ deferred to a later release, in step with the spec.
 > ⚠️ **Substrate release.** See [STATUS.md](./STATUS.md) for exactly what works
 > today, the known gaps (npm publish, HTTP transport, auth enforcement), and
 > readiness by use case before you build on it.
+>
+> 💡 **Writing an agent?** Read the spec's
+> [Authoring Agents — Design Guidance](https://github.com/agentcompose/spec/blob/main/guides/authoring-agents.md)
+> first — agents are best built as thin adapters over existing tools, at the right
+> level of abstraction.
 
 ## Install
 
