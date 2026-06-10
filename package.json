@@ -12,6 +12,7 @@
     "test": "node --test test/*.test.ts",
     "agent": "node examples/research-agent.ts",
     "demo": "node examples/orchestrator.ts",
+    "demo:advanced": "node examples/advanced.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

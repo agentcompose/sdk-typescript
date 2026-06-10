@@ -71,14 +71,43 @@ for await (const ev of client.events(task.id)) {
 }
 ```
 
-## Try the demo
+## Try the demos
 
 ```bash
-npm run demo "AI agent interoperability"
+npm run demo "AI agent interoperability"   # full driver: progress, streaming, artifact
+npm run demo "?"                            # vague topic → input-required clarification loop
+npm run demo:advanced                        # errors, cancellation, idempotency
 ```
 
-Spawns the reference agent as a subprocess, configures it, submits a goal, and
-streams the result back over stdio.
+The orchestrator spawns the reference agent as a subprocess, configures it, submits
+a goal, and reacts to **every** event type over stdio.
+
+## Lifecycle, events & errors
+
+An agent is a task protocol, not a single request/response. Each task moves
+through a state machine and emits a typed event stream.
+
+**Task states:** `submitted → working → (input-required ⇄ working) → completed | failed | canceled`
+
+**Event stream** (`for await (const ev of client.events(taskId))`):
+
+| `ev.type` | Meaning | Builder emits via |
+|-----------|---------|-------------------|
+| `status` | state changed | automatic / `ctx.status()` |
+| `progress` | percent + message | `ctx.progress(50, "writing")` |
+| `message` | streamed output delta | `ctx.message({ kind, text })` |
+| `artifact` | produced file/data | `ctx.artifact(parts, name)` |
+| `result` | final payload | `return [...]` |
+| `error` | structured failure | `throw new AgentError(code, msg)` |
+
+**Errors** carry a reserved code (`ErrorCodes`): `TaskNotFound` (-32000),
+`CapabilityNotSupported` (-32001), `InvalidGoal` (-32002), `AuthRequired` (-32003),
+`RateLimited` (-32004), `InvalidState` (-32005), `UnsupportedVersion` (-32006),
+`InvalidConfiguration` (-32007). Synchronous calls (e.g. `configure`) reject with
+an `AgentError`; task failures surface as an `error` event and a `failed` state.
+
+**Operational verbs:** `client.cancel(id)` (aborts `ctx.signal`), `requestInput()` ⇄
+`provideInput()` (pause/resume), and `submit(goal, { idempotencyKey })` (dedupe retries).
 
 ## API surface
 
