@@ -20,7 +20,8 @@ Last reviewed: 2026-06-10
 
 | Gap | Impact | Tracking |
 |-----|--------|----------|
-| **Not published to npm** | Consumers install from git, not `npm i @agentcompose/sdk`. Version is `0.0.0`. | planned: tag + publish `0.1.0` |
+| **SDK not published to npm** | The SDK itself isn't on npm, so **builders can't `npm i @agentcompose/sdk` to write agents at all**. This is the primary blocker — everything downstream depends on it. Version is `0.0.0`. | planned: tag + publish `0.1.0` |
+| **No published agents yet** | Even once the SDK is published, an agent built *with* it (a separate package) must itself be published before others can `npm i` / `npx` and run it as a subprocess. | derived from SDK publish |
 | **No HTTP transport** | Agents can't be exposed as a network service; same-machine only (in-process / subprocess). | planned |
 | **No auth enforcement** | The descriptor can *declare* auth, but the SDK does not verify bearer/apiKey/oauth on incoming calls. Fine for local, not for exposed agents. | planned (with HTTP) |
 | **No typed capability I/O / sessions** | Agents can't be composed *programmatically* by input/output shape; no cross-task memory. | Spec Scope B |
@@ -32,7 +33,8 @@ Last reviewed: 2026-06-10
 | You want to… | Status |
 |--------------|--------|
 | Prototype an agent and drive it from your own code, locally | ✅ Ready |
-| Publish an agent others install and run as a subprocess | ⚠️ Almost — needs npm publish + versioned tag |
+| **Install the SDK from npm to build agents** | ⚠️ Almost — needs SDK published + versioned tag |
+| Publish your own agent others install and run as a subprocess | ⚠️ Blocked on SDK publish, then publish your agent package |
 | Expose an agent as a hosted HTTP service with auth | ❌ Not yet — needs HTTP transport + auth enforcement |
 | Compose two agents by typed contracts | ❌ Not yet — Spec Scope B (typed I/O + sessions) |
 
@@ -45,7 +47,7 @@ composition layer (typed capability I/O, sessions) is deferred in both the spec
 
 ## Near-term priorities
 
-1. Wire one real model into the reference agent via the `provider` config (prove the configurable-component story end to end).
-2. Publish `0.1.0` to npm.
+1. **Publish the SDK** (`@agentcompose/sdk` `0.1.0`) to npm — unblocks all builders.
+2. Wire one real model into the reference agent via the `provider` config (prove the configurable-component story end to end).
 3. HTTP transport + auth enforcement.
 4. Spec Scope B: typed capability I/O + sessions.
