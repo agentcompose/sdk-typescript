@@ -5,6 +5,8 @@ import addFormatsDefault from "ajv-formats";
 const Ajv = ((AjvDefault as any).default ?? AjvDefault) as any;
 const addFormats = ((addFormatsDefault as any).default ?? addFormatsDefault) as any;
 import { Channel } from "./channel.ts";
+import { createTracer } from "./tracer.ts";
+import type { SpanHandle, TraceApi } from "./tracer.ts";
 import {
   AGENTCOMPOSE_VERSION,
   AgentError,
@@ -38,6 +40,10 @@ export interface HandlerContext extends EmitApi {
   config: AgentConfig;
   /** Pause in input-required until the caller supplies input. */
   requestInput(prompt?: Part[]): Promise<Part[]>;
+  /** Observability surface. A root span wraps the whole handler automatically, so even
+   *  an agent that never touches this is observable (timing + status). Domain spans are
+   *  pure opt-in and auto-nest under the root. See tracer.ts. */
+  trace: TraceApi;
 }
 
 export type AgentHandler = (
@@ -73,6 +79,8 @@ interface TaskRun {
   controller: AbortController;
   done: boolean;
   pendingInput?: (input: Part[]) => void;
+  /** The handler's root span, retained so cancel() can close it from outside #run. */
+  rootSpan?: SpanHandle;
 }
 
 const SECRET_REF = "secretRef";
@@ -183,6 +191,9 @@ export class AgentRuntime {
     const run = this.#require(id);
     if (!run.done) {
       run.controller.abort();
+      // Close the root span before the stream goes terminal; a canceled run ends with an
+      // honest 'unset' verdict rather than a fabricated ok/error.
+      run.rootSpan?.end({ status: "unset" });
       if (run.task.state === "input-required" && run.pendingInput) {
         // Unblock the handler so it can observe the abort.
         run.pendingInput([]);
@@ -266,6 +277,26 @@ export class AgentRuntime {
     if (run.done) return; // canceled before start
     this.#transition(run, "working");
 
+    // A root span wraps the whole handler so every agent is observable for free — its
+    // timing and outcome are recorded even if the handler never opens a span of its own.
+    // The traceId is distinct from the taskId because one logical trace can span many
+    // tasks once compositions re-stamp child spans onto it.
+    const descriptor = this.#def.descriptor;
+    const { trace, rootSpan, runWithRoot } = createTracer({
+      taskId: run.task.id,
+      traceId: "trace_" + randomUUID().slice(0, 12),
+      emit: (ev) => this.#emit(run, ev),
+      root: {
+        name: descriptor.name ?? descriptor.id,
+        kind: "agent",
+        attributes: {
+          "agent.id": descriptor.id,
+          ...(descriptor.version ? { "agent.version": descriptor.version } : {}),
+        },
+      },
+    });
+    run.rootSpan = rootSpan;
+
     try {
       const ctx: HandlerContext = {
         taskId: run.task.id,
@@ -291,9 +322,10 @@ export class AgentRuntime {
             // The structured ask travels on `prompt`; `message` stays human-readable.
             this.#transition(run, "input-required", undefined, prompt);
           }),
+        trace,
       };
 
-      const out = await this.#def.handle(goal, ctx);
+      const out = await runWithRoot(() => this.#def.handle(goal, ctx));
       if (run.done) return; // canceled during work
       const result: Result = Array.isArray(out)
         ? { parts: out }
@@ -301,12 +333,14 @@ export class AgentRuntime {
           ? (out as Result)
           : { parts: [] };
       run.task.result = result;
+      rootSpan.end({ status: "ok" });
       this.#emit(run, { type: "result", taskId: run.task.id, result });
       this.#transition(run, "completed");
     } catch (err) {
       if (run.done) return;
       const error = toRpcError(err);
       run.task.error = error;
+      rootSpan.end({ status: "error", error });
       this.#emit(run, { type: "error", taskId: run.task.id, error });
       this.#transition(run, "failed");
     } finally {

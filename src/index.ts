@@ -1,6 +1,8 @@
 export * from "./types.ts";
 export { defineAgent, AgentRuntime } from "./agent.ts";
 export type { AgentDefinition, AgentHandler, HandlerContext, EmitApi } from "./agent.ts";
+export { createTracer } from "./tracer.ts";
+export type { TraceApi, SpanHandle, SpanOptions } from "./tracer.ts";
 export type { AgentClient } from "./client.ts";
 export { inProcess } from "./transport/in-process.ts";
 export { serveStdio } from "./transport/stdio-server.ts";

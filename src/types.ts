@@ -29,6 +29,54 @@ export interface Artifact {
   createdAt: string;
 }
 
+// ── Observability: spans ─────────────────────────────────────────────────────
+// A span is the universal, shape-agnostic unit of agent observability: a named,
+// timed, optionally-nested operation. It imposes no workflow — an agent with no
+// planning emits no "plan" span, an opaque agent emits only its root span, a deeply
+// composed team emits a deep tree. Structure is described, never prescribed. The
+// envelope here (identity + timing + status) is normative; everything domain-specific
+// rides in `name` + `attributes` under optional semantic conventions. The shape is a
+// deliberate structural subset of an OpenTelemetry span so a trace can be exported to
+// OTLP by a pure mapping, without the core taking any OpenTelemetry dependency.
+export type AttrValue = string | number | boolean | null | AttrValue[];
+export type AttrMap = Record<string, AttrValue>;
+
+/** A point-in-time mark inside a span (e.g. "retry", "tool-result"). */
+export interface SpanEvent {
+  time: number;
+  name: string;
+  attributes?: AttrMap;
+}
+
+/** Span status. `unset` is the honest default for a span that ended without an
+ *  explicit verdict (e.g. interrupted by a durable suspend). */
+export type SpanStatus = "unset" | "ok" | "error";
+
+/** The immutable identity + opening state of a span, carried by `span-start`. */
+export interface SpanStart {
+  /** Stable across the whole composition; the same for every span in one trace. */
+  traceId: string;
+  /** Unique within the trace. */
+  spanId: string;
+  /** Nesting link; absent on a root span. */
+  parentSpanId?: string;
+  name: string;
+  /** Optional, conventional category ("llm", "tool", "step", …). Never required and
+   *  never gates: a consumer may filter on it, but no value is privileged. */
+  kind?: string;
+  startTime: number;
+  /** Attributes known at open time; more may arrive (accumulated) on `span-end`. */
+  attributes?: AttrMap;
+}
+
+/** A fully-materialized span (start + end merged). Producers emit start/end events;
+ *  consumers reconstruct this. */
+export interface Span extends SpanStart {
+  endTime?: number;
+  status: SpanStatus;
+  events?: SpanEvent[];
+}
+
 export interface Result {
   parts: Part[];
 }
@@ -78,7 +126,24 @@ export type TaskEvent =
   | { type: "message"; taskId: string; delta: Part }
   | { type: "artifact"; taskId: string; artifact: Artifact }
   | { type: "result"; taskId: string; result: Result }
-  | { type: "error"; taskId: string; error: RpcError };
+  | { type: "error"; taskId: string; error: RpcError }
+  // Observability plane. These never affect the control plane: an orchestrator acts on
+  // status/result/input-required/error and ignores spans entirely. Start and end are
+  // separate, immutable, append-only events so the trace is live (the tree builds as it
+  // happens), replayable (durable logs/backlogs), and one-way-transport friendly.
+  | { type: "span-start"; taskId: string; span: SpanStart }
+  | {
+      type: "span-end";
+      taskId: string;
+      traceId: string;
+      spanId: string;
+      endTime: number;
+      status: SpanStatus;
+      /** Full accumulated attributes at close; overlays those sent on span-start. */
+      attributes?: AttrMap;
+      events?: SpanEvent[];
+      error?: RpcError;
+    };
 
 export type AgentConfig = Record<string, unknown>;
 
